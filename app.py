@@ -8,11 +8,14 @@ from fastmcp.server.dependencies import get_http_request
 EMAIL = "23f2004096@ds.study.iitm.ac.in"
 
 
-mcp = FastMCP("Challenge MCP Server")
+mcp = FastMCP(
+    "Challenge MCP Server"
+)
 
 
 @mcp.tool
 def solve_challenge() -> str:
+
     request = get_http_request()
 
     challenge = request.headers.get(
@@ -22,20 +25,20 @@ def solve_challenge() -> str:
     if not challenge:
         return "missing_challenge"
 
+
     normalized_email = EMAIL.strip().lower()
 
-    value = f"{challenge}:{normalized_email}"
+    text = f"{challenge}:{normalized_email}"
 
-    result = hashlib.sha256(
-        value.encode()
+    digest = hashlib.sha256(
+        text.encode()
     ).hexdigest()
 
-    return result[:16]
+    return digest[:16]
 
 
-app = FastAPI(
-    redirect_slashes=False
-)
+
+app = FastAPI()
 
 
 @app.get("/")
@@ -46,8 +49,8 @@ def root():
 
 
 mcp_app = mcp.http_app(
-    path="/mcp",
-    transport="streamable-http"
+    transport="streamable-http",
+    path="/mcp"
 )
 
 
