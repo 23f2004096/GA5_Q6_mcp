@@ -1,20 +1,19 @@
 import hashlib
 
-from fastapi import FastAPI, Request
-from mcp.server.fastmcp import FastMCP
+from fastapi import FastAPI
+from fastmcp import FastMCP
+from fastmcp.server.dependencies import get_http_request
 
 
 EMAIL = "23f2004096@ds.study.iitm.ac.in"
 
 
-mcp = FastMCP(
-    "Challenge MCP Server"
-)
+mcp = FastMCP("Challenge MCP Server")
 
 
-@mcp.tool()
-def solve_challenge():
-    request = mcp.get_context().request
+@mcp.tool
+def solve_challenge() -> str:
+    request = get_http_request()
 
     challenge = request.headers.get(
         "X-Exam-Challenge"
@@ -25,11 +24,7 @@ def solve_challenge():
 
     normalized_email = EMAIL.strip().lower()
 
-    value = (
-        challenge
-        + ":"
-        + normalized_email
-    )
+    value = f"{challenge}:{normalized_email}"
 
     result = hashlib.sha256(
         value.encode()
@@ -50,8 +45,10 @@ def root():
     }
 
 
-# IMPORTANT: keep /mcp
+# MCP endpoint MUST be /mcp
 app.mount(
     "/mcp",
-    mcp.streamable_http_app()
+    mcp.http_app(
+        transport="streamable-http"
+    )
 )
