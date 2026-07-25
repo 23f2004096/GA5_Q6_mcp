@@ -45,10 +45,13 @@ def root():
     }
 
 
-# MCP endpoint MUST be /mcp
+mcp_app = mcp.http_app(
+    path="/mcp",
+    transport="streamable-http"
+)
+
+
 app.mount(
-    "/mcp",
-    mcp.http_app(
-        transport="streamable-http"
-    )
+    "",
+    mcp_app
 )
