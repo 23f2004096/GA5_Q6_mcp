@@ -1,6 +1,7 @@
 import hashlib
 
 from fastapi import FastAPI
+
 from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_http_request
 
@@ -25,20 +26,29 @@ def solve_challenge() -> str:
     if not challenge:
         return "missing_challenge"
 
-
     normalized_email = EMAIL.strip().lower()
 
-    text = f"{challenge}:{normalized_email}"
+    value = f"{challenge}:{normalized_email}"
 
-    digest = hashlib.sha256(
-        text.encode()
+    result = hashlib.sha256(
+        value.encode()
     ).hexdigest()
 
-    return digest[:16]
+    return result[:16]
 
 
+# Create MCP ASGI application
+mcp_app = mcp.http_app(
+    transport="streamable-http",
+    path="/mcp"
+)
 
-app = FastAPI()
+
+# IMPORTANT: pass MCP lifespan
+app = FastAPI(
+    lifespan=mcp_app.lifespan,
+    redirect_slashes=False
+)
 
 
 @app.get("/")
@@ -48,12 +58,7 @@ def root():
     }
 
 
-mcp_app = mcp.http_app(
-    transport="streamable-http",
-    path="/mcp"
-)
-
-
+# Mount MCP endpoint
 app.mount(
     "",
     mcp_app
